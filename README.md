@@ -65,6 +65,84 @@ The Random Forest model is the main feature-based model in this version. It uses
 
 The LSTM is trained on hourly demand rather than weekly demand. It is useful for short-horizon hourly forecasting, but it is more complex and less interpretable than the weekly statistical and feature-based models. Because of this, I discuss the LSTM result separately instead of treating it as a direct replacement for the weekly models.
 
+## Main figures
+
+### Figure 1. Daily German electricity demand with rolling median
+
+This plot shows daily German electricity demand from 2015 to 2020. The orange line is the 30-day rolling median, which makes the long-term movement easier to see. The blue band shows the normal variation range. The repeated peaks and dips show that demand has a strong seasonal pattern.
+
+### Figure 2. Average hourly demand: weekday vs weekend
+
+This figure compares the average hourly electricity demand on weekdays and weekends. Weekday demand is clearly higher, especially during working hours. This shows why hourly demand forecasting needs to consider daily routines and working-day effects.
+
+### Figure 3. Monthly seasonal index
+
+This bar chart shows how average demand changes by month compared with the overall average. Values above 1 mean demand is higher than usual. The result shows stronger demand in winter months and weaker demand in some spring/summer months.
+
+### Figure 4. Seasonal decomposition of weekly demand
+
+This decomposition separates weekly electricity demand into trend, seasonal and residual components. The seasonal part confirms a repeating annual pattern, while the trend shows changes in the overall demand level over time.
+
+### Figure 5. ACF and PACF of differenced weekly load
+
+The ACF and PACF plots help identify remaining autocorrelation after differencing. The visible spike around lag 52 supports the use of a yearly seasonal period in the SARIMA model.
+
+### Figure 6. Benchmark forecasts
+
+This figure compares the benchmark forecasts with actual weekly demand over the test period. Seasonal naive follows the yearly pattern better than the mean, naive and drift models, which is why it becomes the main baseline.
+
+### Figure 7. Benchmark RMSE comparison
+
+This bar chart ranks the benchmark models by RMSE. Seasonal naive has the lowest error, showing that repeating the same week from the previous year is a strong simple method for this dataset.
+
+### Figure 8. SARIMA forecast
+
+This figure compares the SARIMA forecast with actual weekly demand and shows the forecast interval. The model captures some seasonal movement, but it does not follow the 2020 demand drop very well.
+
+### Figure 9. SARIMA residual diagnostics
+
+The SARIMA residual plots show the remaining errors after fitting the model. Most residuals are close to zero, but a few large errors remain, suggesting that the SARIMA model does not fully capture unusual demand changes.
+
+### Figure 10. Temperature and electricity demand
+
+This scatter plot shows the relationship between Berlin weekly temperature and German weekly electricity demand. Demand is generally higher at lower temperatures, showing why temperature can be a useful explanatory variable.
+
+### Figure 11. SARIMAX forecast with external covariates
+
+This figure shows the SARIMAX forecast after adding temperature and holiday variables. The external variables add useful context, but the forecast still does not fully beat the stronger benchmark or Random Forest model.
+
+### Figure 12. Random Forest forecast
+
+This plot compares the Random Forest forecast with actual weekly demand. The model follows the general movement of weekly demand better than SARIMA/SARIMAX in this version, especially because it uses lag and calendar-based features.
+
+### Figure 13. Random Forest feature importance
+
+This chart shows the most important input features in the Random Forest model. The 52-week load lag is the strongest feature, confirming that last year’s demand is very important for forecasting this year’s weekly demand.
+
+### Figure 14. Random Forest feature group importance
+
+This grouped importance chart shows that lag features are much more important than weather, holiday and rolling features. This supports the idea that yearly demand memory is the main driver of the weekly forecast.
+
+### Figure 15. LSTM training and validation loss
+
+This figure shows how the LSTM training and validation loss changed over epochs. Both losses decrease, which suggests that the model learned useful hourly demand patterns without obvious divergence during training.
+
+### Figure 16. LSTM forecast compared with actual hourly demand
+
+This plot shows a ten-day sample of the LSTM forecast against actual hourly demand. The forecast follows the daily peaks and troughs closely, showing that LSTM is useful for short-term hourly forecasting.
+
+### Figure 17. Weekly aggregated LSTM forecast
+
+This figure aggregates the hourly LSTM predictions into weekly averages. The forecast line is very close to the actual weekly load, but this result should be interpreted carefully because it comes from a rolling hourly setup.
+
+### Figure 18. Final model comparison
+
+This bar chart compares the main models using RMSE. LSTM has the lowest error overall, but it uses hourly data. For weekly operational forecasting, Random Forest is the strongest practical model in this version.
+
+### Figure 19. Weekly forecasts compared against actual demand
+
+This figure compares the weekly forecasts from Seasonal Naive, SARIMA, SARIMAX and Random Forest against actual weekly demand. It shows how the models behave differently during the same two-year test period.
+
 ## Result snapshot
 
 The main results from the notebook are:
@@ -94,13 +172,7 @@ The Random Forest model gives the best weekly forecasting result in this version
 3. Run the cells from top to bottom.
 4. Check that the generated plots and tables match the report.
 
-If the local CSV file is not available, the OPSD source link above can be used to download the original time-series file again.
-
-If running in a fresh Python environment, install the main packages first:
-
-```bash
-pip install pandas numpy matplotlib seaborn statsmodels scikit-learn tensorflow holidays requests
-```
+If the local CSV file is not available, the OPSD source link below can be used to download the original time-series file again.
 
 ## Notes on forecast interpretation
 
