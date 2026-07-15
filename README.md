@@ -181,8 +181,48 @@ If the local CSV file is not available, the OPSD source link below can be used t
 - Holiday features are safe for operational forecasting because holiday dates are known in advance.
 - Temperature variables are only fully operational if they come from weather forecasts available at the forecast origin.
 - The recommended weekly operational model in this version is Random Forest, with seasonal naive kept as a simple backup benchmark.
+## Answers for the questions in the assignment
+## Answers were reported in the report in the designated paragrapghs 5,6,etc
 
-## References
+## What the Model Comparison Revealed
+
+Seasonal Naive provided a demanding weekly benchmark, with RMSE 3006.76, MAE 2318.52 and MAPE 4.41%. Random Forest delivered the only meaningful weekly improvement, reducing RMSE to 2505.60 and MAPE to 3.51%. This represents an RMSE reduction of approximately 16.7%, showing that lagged demand, calendar information and engineered features added predictive value beyond repeating the corresponding week from the previous year.
+
+SARIMA produced RMSE 4765.23 and MAPE 7.37%, while temperature-and-holiday SARIMAX returned RMSE 5633.88 and MAPE 8.92%. Neither statistical model surpassed Seasonal Naive during the two-year test period. The LSTM achieved RMSE 1690.02 and MAPE 2.40%, but these values were calculated from hourly observations. Its performance should not be ranked directly against the weekly models until both forecasts and observations are evaluated at the same frequency.
+
+## Why an Annual Seasonal Structure Was Retained
+
+The forecasting series was weekly, meaning that approximately 52 observations represented one annual cycle. This agreed with the recurring winter–summer demand pattern and the seasonal dependence visible in the exploratory and autocorrelation results. The final SARIMA specification was `(4,2,6)(1,1,1,52)`, using non-seasonal differencing `d=2`, seasonal differencing `D=1` and a seasonal period of `52`.
+
+These differencing orders emerged from the parameter-search process. However, the ADF and KPSS evidence suggested that the original weekly series did not require especially aggressive non-seasonal differencing. The model’s weak hold-out performance supports the possibility that differencing twice removed useful level information. A future implementation should compare `d=0`, `d=1` and `d=2` using rolling validation, while reserving the final two years for one unbiased evaluation.
+
+## What Was Known at the Forecast Date
+
+The information boundary was protected when the feature table was constructed. Load lags and rolling summaries were calculated only after shifting the load series, ensuring that the target week could not become one of its own predictors. The feature `temperature_lag1` was also created by shifting temperature by one week, making it historical and available at the forecasting date.
+
+The models nevertheless retained observed same-week temperature and a temperature-change feature derived from current and previous temperature. These variables do not leak the target electricity load, but their observed future values would not be available during a real forecast. They would need to be supplied by an external weather forecast. Consequently, load lags, rolling features, calendar variables, holidays and lagged temperature are operationally available, whereas results involving observed same-week temperature must be interpreted as conditional.
+
+## Whether Weather and Holidays Added Forecasting Value
+
+Temperature and holiday covariates did not improve SARIMAX accuracy in this experiment. Temperature-and-holiday SARIMAX produced RMSE 5633.88 and MAPE 8.92%, compared with RMSE 3006.76 and MAPE 4.41% for Seasonal Naive. This does not demonstrate that weather and holidays are irrelevant. Instead, it suggests that the selected SARIMAX structure and a single Berlin temperature series did not represent national electricity demand sufficiently well.
+
+Holiday dates are known in advance and can therefore be used safely for operational forecasting. One-week lagged temperature is also known. Future measured temperature is different because it is unavailable at the forecast origin. Unless a genuine weather forecast is supplied, SARIMAX results based on contemporaneous temperature should be described as explanatory or conditional forecasts.
+
+## Interpretability and Modelling Complexity
+
+SARIMAX was the easiest advanced model to explain because its autoregressive, moving-average, differencing, seasonal and exogenous components had identifiable statistical roles. It also generated prediction intervals that could be used to communicate uncertainty. Its main weakness in this study was forecast accuracy.
+
+Random Forest occupied the middle of the interpretability spectrum. An individual prediction was less transparent than a SARIMAX equation, but feature-importance values identified which inputs contributed most strongly. It could also represent non-linear relationships without requiring the same stationarity assumptions as SARIMA or SARIMAX.
+
+LSTM was the most complex and least transparent model. It could learn detailed hourly and longer-range temporal patterns, but required scaling, sequence construction, architectural tuning and greater computational monitoring. Its hidden-state representation also made individual forecasts harder to explain to a non-technical user.
+
+## Operational Recommendation
+
+Random Forest provides the most practical model for weekly operational forecasting in this version. It produced the best weekly accuracy, improved substantially over Seasonal Naive, remained easier to retrain and maintain than the LSTM, and offered feature-importance evidence that could be communicated to users.
+
+Its principal limitation is uncertainty because it does not automatically produce SARIMAX-style confidence intervals. Bootstrap, quantile or conformal prediction intervals should therefore be added before deployment. If contemporaneous temperature remains an input, it must be supplied by a genuine weather forecast. Otherwise, the operational version should rely on lagged demand, rolling history, calendar information, known holidays and lagged weather.
+
+Seasonal Naive should remain available as a monitoring benchmark and emergency fallback. It is inexpensive, stable and simple to update, making it useful for detecting whether the deployed model continues to provide meaningful forecasting value.
 
 The report discusses the modelling choices and literature in more detail. Key references include standard time-series forecasting material, SARIMA/SARIMAX methods, Random Forest/feature-based forecasting ideas and LSTM literature for sequential demand forecasting.
 
